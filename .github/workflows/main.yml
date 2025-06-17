@@ -95,3 +95,21 @@ jobs:
           git checkout main
           git merge origin/dev --no-ff -m "Auto-merge from dev [CI]"
           git push origin main
+
+  notify:
+    if: always()
+    needs: [handle_failure, handle_success]
+    runs-on: ubuntu-latest
+    name: Notify Discord
+
+    steps:
+      - name: Notify Discord
+        uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: |
+            📢 Nouveau push sur **${{ github.repository }}** par **${{ github.actor }}**.
+            ✅ Tests réussis : ${{ needs.test.outputs.tests_passed == '0' }}
+            🧪 État du push : ${{ needs.test.outputs.tests_passed == '0' && 'Succès' || 'Échec' }}
+            🔁 Branche de notification : `${{ github.ref_name }}`
